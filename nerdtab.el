@@ -1,7 +1,7 @@
 ;;; nerdtab.el --- A sidebar of tabs
 
 ;;; Commentary:
-;; 
+;;
 
 
 ;;; Code:
@@ -112,7 +112,10 @@ So user can expect the index of a tab to not change very often.
         (nerdtab-refresh)
         (nerdtab--install-advice))
     (nerdtab--remove-advice)
-    (kill-buffer nerdtab--buffer)))
+    (kill-buffer nerdtab--buffer)
+    (setq nerdtab--buffer nil)
+    (delete-window nerdtab--window)
+    (setq nerdtab--window nil)))
 
 ;;
 ;; Functions -- sort of inverse hiearchy, the final function that calls everyone else is in the bottom.
@@ -232,7 +235,7 @@ You can see index is at the beginning."
                    'line-height
                    1.5)))
 
-(defun nerdtab-redraw-all-tab ()
+(defun nerdtab--redraw-all-tab ()
   "Redraw every tab in `nerdtab-buffer'."
   (interactive)
   (nerdtab--show-ui)
@@ -273,7 +276,7 @@ which most likely will change the order of your tabs.
 So don't use it too often."
   (interactive)
   (nerdtab-full-update-tab-list)
-  (nerdtab-redraw-all-tab))
+  (nerdtab--redraw-all-tab))
 
 ;; (defun nerdtab-refresh-on-hook (&rest _)
 ;;   "Refresh in 0.5 seconds."
@@ -293,54 +296,66 @@ So don't use it too often."
 
 (defun nerdtab--add-buffer (buffer)
   "Add BUFFER to `nerdtab--tab-list'."
-  (when nerdtab-mode
+  (when (nerdtab--if-valid-buffer buffer)
     (add-to-list
      'nerdtab--tab-list
-     (nerdtab--make-tab buffer))))
+     (nerdtab--make-tab buffer)
+     t))
+  buffer)
 
 (defun nerdtab--add-buffer-advice (oldfunc buffer-or-name)
   "Advice around `get-buffer-create' (OLDFUNC). BUFFER-OR-NAME.
 Add new buffer to `nerdtab--tab-list'."
-  (nerdtab--add-buffer (apply oldfunc (list buffer-or-name))))
+  (let ((buffer (nerdtab--add-buffer (apply oldfunc (list buffer-or-name)))))
+    (nerdtab--redraw-all-tab)
+    buffer))
 
 (defun nerdtab--remove-buffer (buffer)
   "Remove BUFFER from `nerdtab--tab-list'."
-  (when (and nerdtab-mode (member buffer (buffer-list)))
-    (delete (nerdtab--make-tab buffer) nerdtab--tab-list)))
+  (let ((tab (nerdtab--make-tab buffer)))
+    (when (member tab nerdtab--tab-list)
+      (delete tab nerdtab--tab-list))))
 
 (defun nerdtab--remove-buffer-advice (oldfunc &optional buffer-or-name)
   "Advice around `kill-buffer' (OLDFUNC). BUFFER-OR-NAME.
 Add new buffer to `nerdtab--tab-list'."
-  (nerdtab--remove-buffer (apply oldfunc (list buffer-or-name))))
+  (let ((buffer-to-kill (if buffer-or-name
+                            (get-buffer-create buffer-or-name)
+                          (current-buffer))))
+    (nerdtab--remove-buffer buffer-to-kill)
+    (nerdtab--redraw-all-tab)
+    (apply oldfunc (list buffer-or-name))))
 
 (defun nerdtab--rename-buffer (new-name)
   "Rename a tab to NEW-NAME."
-  (when nerdtab-mode
-    (let ((old-tab (nerdtab--make-tab (current-buffer)))
-          (index 0))
-      (dolist (tab nerdtab--tab-list)
-        (when (equal tab old-tab)
-          (setf (nth index nerdtab--tab-list) `(,(nerdtab-turncate-buffer-name
-                                                  new-name)
-                                                ,(current-buffer))))
-        (setq index (1+ index))))))
+  (let ((old-tab (nerdtab--make-tab (current-buffer)))
+        (index 0))
+    (dolist (tab nerdtab--tab-list)
+      (when (equal tab old-tab)
+        (setf (nth index nerdtab--tab-list) `(,(nerdtab-turncate-buffer-name
+                                                new-name)
+                                              ,(current-buffer))))
+      (setq index (1+ index))))
+  new-name)
 
 (defun nerdtab--rename-buffer-advice (oldfunc new-name &optional unique)
   "Advice around `rename-buffer' (OLDFUNC). NEW-NAME. UNIQUE.
 Add new buffer to `nerdtab--tab-list'."
-  (nerdtab--rename-buffer (apply oldfunc (list new-name unique))))
+  (let ((new-name (nerdtab--rename-buffer (apply oldfunc (list new-name unique)))))
+    (nerdtab--redraw-all-tab)
+    new-name))
 
 (defun nerdtab--install-advice ()
   "Install advices."
-  (advice-add 'get-buffer-create :around #'nerdtab--add-buffer)
-  (advice-add 'kill-buffer       :around #'nerdtab--remove-buffer)
-  (advice-add 'rename-buffer     :around #'nerdtab--rename-buffer))
+  (advice-add 'get-buffer-create :around #'nerdtab--add-buffer-advice)
+  (advice-add 'kill-buffer       :around #'nerdtab--remove-buffer-advice)
+  (advice-add 'rename-buffer     :around #'nerdtab--rename-buffer-advice))
 
 (defun nerdtab--remove-advice ()
   "Remove advices."
-  (advice-remove 'get-buffer-create #'nerdtab--add-buffer)
-  (advice-remove 'kill-buffer       #'nerdtab--remove-buffer)
-  (advice-remove 'rename-buffer     #'nerdtab--rename-buffer))
+  (advice-remove 'get-buffer-create #'nerdtab--add-buffer-advice)
+  (advice-remove 'kill-buffer       #'nerdtab--remove-buffer-advice)
+  (advice-remove 'rename-buffer     #'nerdtab--rename-buffer-advice))
 
 (provide 'nerdtab)
 
