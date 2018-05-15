@@ -1,7 +1,26 @@
 ;;; nerdtab.el --- A sidebar of tabs
 
 ;;; Commentary:
+;; This package gives you tabs.
+;; But instead of the normal GUI tabs you might think of,
+;; it provides a more keyboard-oriented (and visually inadequate) tabs.
+;; You can jump to a specific buffer by `nerdtab-jump-<number>'
+;; or by clicking the tab.
+
+;; `nerdtab-mode' is a global minor mode.
+;; Turn it on and it will open a side window and display buffers as tabs for you.
+
+;; You may notice a slight delay between change in buffer list
+;; and update in nerdtab window.
+;; That is because I use a timer to invoke tab list updates
+;; because 1) you probably don't need the buffer to show up in list
+;; immediatly 2) it protects Emacs from crashing when it opens 10000 buffers at once.
 ;;
+;; If there are people that actually use this package
+;; and someone actually cares about that lag,
+;; I can add a mode or an option.
+
+;; Conventions: nerdtab-- means private, nerdtab- means public / customizable (for variables)
 
 
 ;;; Code:
@@ -23,13 +42,18 @@
                  (const top)
                  (const bottom)))
 
-(defcustom nerdtab-mode-line-format nil
+(defcustom nerdtab-mode-line-format '(" ")
   "Mode-line format of nerdtab buffer."
   :group 'nerdtab
-  :type 'sexp)
+  :type 'plist)
 
 (defcustom nerdtab-tab-width 15
   "Width of nerdtab tab."
+  :group 'nerdtab
+  :type 'number)
+
+(defcustom nerdtab-tab-height 1
+  "Height of tabs if `nerdtab-window-position' is 'top or 'bottom."
   :group 'nerdtab
   :type 'number)
 
@@ -48,6 +72,11 @@
 Nerdtab does not list buffers that match any regex in this blacklist."
   :group 'nerdtab
   :type 'sexp)
+
+(defcustom nerdtab--update-interval 2
+  "Nerdtab checkes if it needs to update tab list in every this seconds."
+  :group 'nerdtab
+  :type 'number)
 
 
 ;;
@@ -94,11 +123,14 @@ So user can expect the index of a tab to not change very often.
   "If non-nil, nerdtab will update tab list in next cycle.
 Time interval between to cycle is defined by `nerdtab--update-interval'.")
 
-(defvar nerdtab--update-interval 2
-  "Nerdtab checkes if it needs to update tab list in every this seconds.")
-
 (defvar nerdtab--timer nil
   "The object that is used to disable timer.")
+
+(defvar nerdtab-open-func #'switch-to-buffer
+  "The function to open buffer.
+Used in tab button and nerdtab-jump functions.
+
+The function should take a singgle buffer as argument.")
 
 ;;
 ;; Modes
@@ -153,29 +185,6 @@ THIS and THAT have to ba lists of sexps to be evaluate."
   "Get nerdtab buffer, create one if not exist."
   (get-buffer-create nerdtab-buffer-name))
 
-(defun nerttab--get-window-or-create ()
-  "Select nerdtab window, create one if not exist.
-Return original window for convience."
-  (let ((original-window (selected-window)))
-    (if (window-live-p nerdtab--window)
-        original-window
-      (pcase nerdtab-window-position
-        ('top (let
-                ((original-window (split-window-below 2)))
-                (setq nerdtab--window (selected-window))
-                original-window))
-        ('bottom (progn
-                   (setq nerdtab--window
-                         (select-window (split-window-below 2)))
-                   original-window))
-        ('left (let ((original-window (split-window-right nerdtab-tab-width)))
-                 (setq nerdtab--window (selected-window))
-                 original-window))
-        ('right (progn
-                  (setq nerdtab--window
-                        (select-window (split-window-right nerdtab-tab-width)))
-                  original-window))))))
-
 ;; (defun nerdtab-turncate-buffer-name (buffer-name)
 ;;   "Make sure BUFFER-NAME is short enough."
 ;;   (let ((max-width (- nerdtab-tab-width 3))) ; numbering take 2-3 char
@@ -212,15 +221,28 @@ If yes, return t, otherwise return nil."
 (defun nerdtab--show-ui ()
   "Get nerdtab window and buffer displayed.
 This function makes sure both buffer and window are present."
-  (let ((original-window (nerttab--get-window-or-create)))
-    (select-window nerdtab--window)
-    (setq nerdtab--buffer (switch-to-buffer (nerdtab--get-buffer-or-create)))
-    (set-window-buffer nerdtab--window nerdtab--buffer)
+  (let ((original-window (selected-window)))
+    (setq nerdtab--buffer (nerdtab--get-buffer-or-create))
+    (if (window-live-p nerdtab--window)
+        (progn
+          (select-window nerdtab--window)
+          (switch-to-buffer nerdtab--buffer))
+      (select-window
+       (setq nerdtab--window
+             (display-buffer-in-side-window
+              nerdtab--buffer
+              `((side . ,nerdtab-window-position)
+                ,(nerdtab--h-this-v-that|
+                  (`(window-height . ,nerdtab-tab-height))
+                  (`(window-width . ,nerdtab-tab-width)))))))
+      (switch-to-buffer nerdtab--buffer))
     (nerdtab-major-mode)
-    (setq mode-line-format nil)
+    (setq mode-line-format nerdtab-mode-line-format)
     (nerdtab--h-this-v-that|
-     ((window-preserve-size) nil t)
-     ((window-preserve-size)))
+     ((window-preserve-size nil t)
+      (setq-local line-spacing 5))
+     ((window-preserve-size)
+      (setq-local line-spacing 3)))
     (when (featurep 'linum) (linum-mode -1))
     (when (featurep 'nlinum) (nlinum-mode -1))
     (when (featurep 'display-line-numbers) (display-line-numbers-mode -1))
@@ -237,7 +259,7 @@ You can see index is at the beginning."
     (insert-text-button (format "%d %s" index tab-name)
                    'action
                    `(lambda (_)
-                     (display-buffer ,buffer))
+                     (funcall nerdtab-open-func ,buffer))
                    'help-echo
                    (buffer-name buffer)
                    'follow-link
@@ -340,7 +362,7 @@ If DO is non-nil, make it not to."
 (defun nerdtab-jump (index)
   "Jump to INDEX tab."
   (interactive "nIndex of tab: ")
-  (switch-to-buffer (nth 1 (nth index nerdtab--tab-list))))
+  (funcall nerdtab-open-func (nth 1 (nth index nerdtab--tab-list))))
 
 (defun nerdtab-make-jump-func (max)
   "Make `nerdtab-jump-n' functions from 1 to MAX."
