@@ -111,6 +111,11 @@ Nerdtab does not list buffers that match any regex in this blacklist."
   "Face of tabs in nerdtab buffer."
   :group 'nerdtab)
 
+(defface nerdtab-current-tab-face
+  '((t (:inherit highlight :underline nil)))
+  "Face of current tab in nerdtab buffer."
+  :group 'nerdtab)
+
 (defface nerdtab-tab-mouse-face
   '((t (:inherit highlight :underline nil)))
   "Face of tabs under mouse in nerdtab buffer."
@@ -268,13 +273,17 @@ This function makes sure both buffer and window are present."
     (select-window original-window)
     ))
 
-(defun nerdtab--draw-tab (tab index)
+(defun nerdtab--draw-tab (tab index &optional original-buffer)
   "Draw a single TAB, marked with INDEX, as a button in current buffer.
+ORIGINAL-BUFFER will be highlighted.
 This function doesn't insert newline.
 The button lookes like: 1 *Help*.
-You can see index is at the beginning."
-  (let ((tab-name (car tab))
-        (buffer (nth 1 tab)))
+\"1\" is the index."
+  (let* ((tab-name (car tab))
+        (buffer (nth 1 tab))
+        (tab-face (if (eq buffer original-buffer)
+                      'nerdtab-current-tab-face
+                    'nerdtab-tab-face)))
     (insert-text-button (format "%d %s" index tab-name)
                    'action
                    `(lambda (_)
@@ -284,23 +293,21 @@ You can see index is at the beginning."
                    'follow-link
                    t
                    'face
-                   'nerdtab-tab-face
+                   tab-face
                    'mouse-face
-                   'nerdtab-tab-mouse-face
-                   ;; TODO not working
-                   'line-height
-                   1.5)))
+                   'nerdtab-tab-mouse-face)))
 
 (defun nerdtab--redraw-all-tab ()
   "Redraw every tab in `nerdtab-buffer'."
   (interactive)
-  (let ((original-window (selected-window)))
+  (let ((original-window (selected-window))
+        (original-buffer (current-buffer)))
     (select-window nerdtab--window)
     (setq buffer-read-only nil)
     (erase-buffer)
     (let ((index 0))
       (dolist (tab nerdtab--tab-list)
-        (nerdtab--draw-tab tab index)
+        (nerdtab--draw-tab tab index original-buffer)
         (setq index (1+ index))
         (insert (nerdtab--h-this-v-that| ("  ") ("\n"))))
       (goto-char 0))
