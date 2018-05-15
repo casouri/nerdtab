@@ -17,7 +17,7 @@
 
 ;; Author: Yuan Fu <casouri@gmail.com>
 ;; URL: https://github.com/casouri/nerdtab
-;; Version: 1.1
+;; Version: 1.2
 ;; Keywords: convenience
 ;; Package-Requires: ((emacs "25"))
 
@@ -33,6 +33,8 @@
 ;; `nerdtab-mode' is a global minor mode.
 ;; Turn it on and it will open a side window and display buffers as tabs for you.
   
+;; Update: OK so I actually can't bear the lag so I changed the behavior to activly update tab list.
+;;
 ;; You may notice a slight delay between change in buffer list
 ;; and update in nerdtab window.
 ;; That is because I use a timer to invoke tab list updates
@@ -167,11 +169,11 @@ The function should take a singgle buffer as argument.")
 (define-derived-mode nerdtab-major-mode special-mode
   "NerdTab")
 
-(define-minor-mode nerdtab-mode
-  "A global minor mode that controls nerdtab hooks."
+(define-minor-mode nerdtab-timer-mode
+  "A global minor mode that update nerdtab tabs base on timer."
   :global t
   :require 'nerdtab
-  (if nerdtab-mode
+  (if nerdtab-timer-mode
       (progn
         (nerdtab--show-ui)
         (nerdtab-full-refresh)
@@ -182,8 +184,22 @@ The function should take a singgle buffer as argument.")
     (kill-buffer nerdtab--buffer)
     (setq nerdtab--buffer nil)
     (delete-window nerdtab--window)
-    (setq nerdtab--window nil)
-    ))
+    (setq nerdtab--window nil)))
+
+(define-minor-mode nerdtab-mode
+  "A global minor mode that provide tabs and activly update tab list."
+  :global t
+  :require 'nerdtab
+  (if nerdtab-mode
+      (progn
+        (nerdtab--show-ui)
+        (nerdtab-full-refresh)
+        (add-hook 'buffer-list-update-hook #'nerdtab--active-update))
+    (remove-hook 'buffer-list-update-hook #'nerdtab--active-update)
+    (kill-buffer nerdtab--buffer)
+    (setq nerdtab--buffer nil)
+    (delete-window nerdtab--window)
+    (setq nerdtab--window nil)))
 
 ;;
 ;; Functions -- sort of inverse hiearchy, the final function that calls everyone else is in the bottom.
@@ -384,6 +400,13 @@ If DO is non-nil, make it not to."
   "Update when needs to."
   (when nerdtab--do-update
     (nerdtab-update)))
+
+(defun nerdtab--active-update ()
+  "Used in `nerdtab-active-mode'. Update tab list."
+  (remove-hook 'buffer-list-update-hook #'nerdtab--active-update)
+  (nerdtab-update)
+  (when nerdtab-mode
+    (add-hook 'buffer-list-update-hook #'nerdtab--active-update)))
 
 (defun nerdtab-jump (index)
   "Jump to INDEX tab."
