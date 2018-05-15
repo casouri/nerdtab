@@ -1,26 +1,49 @@
-;;; nerdtab.el --- A sidebar of tabs
+;;; nerdtab.el --- Keyboard-oriented tabs
+
+;; Copyright (C) 2018 Yuan Fu
+
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;; Author: Yuan Fu <casouri@gmail.com>
+;; URL: https://github.com/casouri/nerdtab
+;; Version: 1.0
+;; Keywords: convenience
+;; Package-Requires: ((emacs "25"))
+
 
 ;;; Commentary:
+;;
 ;; This package gives you tabs.
 ;; But instead of the normal GUI tabs you might think of,
 ;; it provides a more keyboard-oriented (and visually inadequate) tabs.
 ;; You can jump to a specific buffer by `nerdtab-jump-<number>'
 ;; or by clicking the tab.
-
+  
 ;; `nerdtab-mode' is a global minor mode.
 ;; Turn it on and it will open a side window and display buffers as tabs for you.
-
+  
 ;; You may notice a slight delay between change in buffer list
 ;; and update in nerdtab window.
 ;; That is because I use a timer to invoke tab list updates
 ;; because 1) you probably don't need the buffer to show up in list
 ;; immediatly 2) it protects Emacs from crashing when it opens 10000 buffers at once.
-;;
+
 ;; If there are people that actually use this package
 ;; and someone actually cares about that lag,
 ;; I can add a mode or an option.
-
-;; Conventions: nerdtab-- means private, nerdtab- means public / customizable (for variables)
+  
+;; Note that `nerdtab--' means private, `nerdtab-' means public / customizable (for variables)
 
 
 ;;; Code:
@@ -128,7 +151,7 @@ Time interval between to cycle is defined by `nerdtab--update-interval'.")
 
 (defvar nerdtab-open-func #'switch-to-buffer
   "The function to open buffer.
-Used in tab button and nerdtab-jump functions.
+Used in tab button and `nerdtab-jump-xx' functions.
 
 The function should take a singgle buffer as argument.")
 
@@ -136,18 +159,13 @@ The function should take a singgle buffer as argument.")
 ;; Modes
 ;;
 
-(defvar nerdtab-major-mode-map
-  (let ((keymap (make-sparse-keymap)))
-    (define-key keymap (kbd "q") #'nerdtab-quit)
-    keymap)
-  "Keymap of nerdtab major mode.")
-
 (define-derived-mode nerdtab-major-mode special-mode
   "NerdTab")
 
 (define-minor-mode nerdtab-mode
   "A global minor mode that controls nerdtab hooks."
   :global t
+  :require 'nerdtab
   (if nerdtab-mode
       (progn
         (nerdtab--show-ui)
