@@ -92,7 +92,7 @@
   :group 'nerdtab
   :type 'number)
 
-(defcustom nerdtab-regex-blacklist '("\\*.*\\*" "^magit.*")
+(defcustom nerdtab-regex-blacklist '("\\*.*\\*" "^magit.*" "COMMIT_EDITMSG")
   "The regex blacklist of buffer names.
 Nerdtab does not list buffers that match any regex in this blacklist."
   :group 'nerdtab
@@ -265,11 +265,8 @@ If yes, return t, otherwise return nil."
   "Get nerdtab window and buffer displayed.
 This function makes sure both buffer and window are present."
   (let ((original-window (selected-window)))
-    (setq nerdtab--buffer (nerdtab--get-buffer-or-create))
-    (if (window-live-p nerdtab--window)
-        (progn
-          (select-window nerdtab--window)
-          (switch-to-buffer nerdtab--buffer))
+    (unless (window-live-p nerdtab--window)
+      (setq nerdtab--buffer (nerdtab--get-buffer-or-create))
       (select-window
        (setq nerdtab--window
              (display-buffer-in-side-window
@@ -278,29 +275,26 @@ This function makes sure both buffer and window are present."
                 ,(nerdtab--h-this-v-that|
                   (`(window-height . ,nerdtab-tab-height))
                   (`(window-width . ,nerdtab-tab-width)))))))
-      (switch-to-buffer nerdtab--buffer))
-    (nerdtab-major-mode)
-    (setq mode-line-format nerdtab-mode-line-format)
-    (nerdtab--h-this-v-that|
-     ((window-preserve-size nil t)
-      (setq-local line-spacing 5))
-     ((window-preserve-size)
-      (setq-local line-spacing 3)))
-    (when (featurep 'linum) (linum-mode -1))
-    (when (featurep 'nlinum) (nlinum-mode -1))
-    (when (featurep 'display-line-numbers) (display-line-numbers-mode -1))
-    (select-window original-window)
-    ))
+      (switch-to-buffer nerdtab--buffer)
+      (nerdtab-major-mode)
+      (setq mode-line-format nerdtab-mode-line-format)
+      (nerdtab--h-this-v-that|
+       ((setq-local line-spacing 5))
+       ((setq-local line-spacing 3)))
+      (when (featurep 'linum) (linum-mode -1))
+      (when (featurep 'nlinum) (nlinum-mode -1))
+      (when (featurep 'display-line-numbers) (display-line-numbers-mode -1))
+      (select-window original-window))))
 
-(defun nerdtab--draw-tab (tab index &optional original-buffer)
+(defun nerdtab--draw-tab (tab index &optional current-buffer)
   "Draw a single TAB, marked with INDEX, as a button in current buffer.
-ORIGINAL-BUFFER will be highlighted.
+CURRENT-BUFFER will be highlighted.
 This function doesn't insert newline.
 The button lookes like: 1 *Help*.
 \"1\" is the index."
   (let* ((tab-name (car tab))
         (buffer (nth 1 tab))
-        (tab-face (if (eq buffer original-buffer)
+        (tab-face (if (eq buffer current-buffer)
                       'nerdtab-current-tab-face
                     'nerdtab-tab-face)))
     (insert-text-button (format "%d %s" index tab-name)
@@ -320,13 +314,13 @@ The button lookes like: 1 *Help*.
   "Redraw every tab in `nerdtab-buffer'."
   (interactive)
   (let ((original-window (selected-window))
-        (original-buffer (current-buffer)))
+        (current-buffer (current-buffer)))
     (select-window nerdtab--window)
     (setq buffer-read-only nil)
     (erase-buffer)
     (let ((index 0))
       (dolist (tab nerdtab--tab-list)
-        (nerdtab--draw-tab tab index original-buffer)
+        (nerdtab--draw-tab tab index current-buffer)
         (setq index (1+ index))
         (insert (nerdtab--h-this-v-that| ("  ") ("\n"))))
       (goto-char 0))
@@ -377,8 +371,9 @@ So don't use it too often."
   "Update nerdtab tab list.
 Similar to `nerdtab-full-refresh' but do not change the order of tabs."
   (nerdtab--show-ui)
-  (nerdtab--update-tab-list)
-  (nerdtab--redraw-all-tab)
+  (when (nerdtab--if-valid-buffer (current-buffer))
+    (nerdtab--update-tab-list)
+    (nerdtab--redraw-all-tab))
   (nerdtab--update-next-cycle -1))
 
 ;;
