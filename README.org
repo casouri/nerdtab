@@ -1,0 +1,98 @@
+#+TITLE: NerdTab
+
+* Summary
+
+This package gives you tabs.
+But instead of the normal GUI tabs you might think of,
+it provides a more keyboard-oriented (and visually inadequate) tabs.
+You can jump to a specific buffer by `nerdtab-jump-<number>'
+or by clicking the tab.
+
+* Screenshot
+
+- on left :: [[./s0.png][./s0.png]]
+
+- on top :: [[./s1.png][./s1.png]]
+
+            
+* Usage
+
+  
+It is not in melpa so you need to manually load it (or require it)
+#+BEGIN_SRC lisp
+(load "nerdtab.el")
+#+END_SRC
+
+Use =nerdtab-jump-<number>= to jump to a buffer.
+You can bind those functions to keys. 
+On macOS, you can bind them to =s-<1..9>=. 
+
+Alternativly, you can just click on the tab.
+            
+* Customizations
+
+#+BEGIN_SRC lisp
+(defcustom nerdtab-window-position 'left
+  "The position of nerdtab window."
+  :group 'nerdtab
+  :type '(choice (const left)
+                 (const right)
+                 (const top)
+                 (const bottom)))
+
+(defcustom nerdtab-mode-line-format '(" ")
+  "Mode-line format of nerdtab buffer."
+  :group 'nerdtab
+  :type 'plist)
+
+(defcustom nerdtab-tab-width 15
+  "Width of nerdtab tab."
+  :group 'nerdtab
+  :type 'number)
+
+(defcustom nerdtab-tab-height 1
+  "Height of tabs if `nerdtab-window-position' is 'top or 'bottom."
+  :group 'nerdtab
+  :type 'number)
+
+(defcustom nerdtab-max-tab-vertical 50
+  "Maximum number of tabs when displayed vertically."
+  :group 'nerdtab
+  :type 'number)
+
+(defcustom nerdtab-max-tab-horizontal 20
+  "Maximum number of tabs when displayed horizontally."
+  :group 'nerdtab
+  :type 'number)
+
+(defcustom nerdtab-regex-blacklist '("\\*.*\\*")
+  "The regex blacklist of buffer names.
+Nerdtab does not list buffers that match any regex in this blacklist."
+  :group 'nerdtab
+  :type 'sexp)
+
+(defcustom nerdtab--update-interval 2
+  "Nerdtab checkes if it needs to update tab list in every this seconds."
+  :group 'nerdtab
+  :type 'number)
+
+
+(defface nerdtab-tab-face
+  '((t (:inherit default :underline nil)))
+  "Face of tabs in nerdtab buffer."
+  :group 'nerdtab)
+
+(defface nerdtab-tab-mouse-face
+  '((t (:inherit highlight :underline nil)))
+  "Face of tabs under mouse in nerdtab buffer."
+  :group 'nerdtab)
+
+(defvar nerdtab-buffer-name "*nerdtab*"
+  "Name of nerdtab buffer.")
+
+(defvar nerdtab-open-func #'switch-to-buffer
+  "The function to open buffer.
+Used in tab button and nerdtab-jump functions.
+
+The function should take a singgle buffer as argument.")
+#+END_SRC
