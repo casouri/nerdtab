@@ -162,6 +162,9 @@ Used in tab button and `nerdtab-jump-xx' functions.
 
 The function should take a singgle buffer as argument.")
 
+(defvar nerdtab--last-buffer nil
+  "Last buffer. Used to compare against current buffer to see if buffer changed.")
+
 ;;
 ;; Modes
 ;;
@@ -194,8 +197,8 @@ The function should take a singgle buffer as argument.")
       (progn
         (nerdtab--show-ui)
         (nerdtab-full-refresh)
-        (add-hook 'buffer-list-update-hook #'nerdtab--active-update))
-    (remove-hook 'buffer-list-update-hook #'nerdtab--active-update)
+        (add-hook 'post-command-hook #'nerdtab--active-update))
+    (remove-hook 'post-command-hook #'nerdtab--active-update)
     (kill-buffer nerdtab--buffer)
     (setq nerdtab--buffer nil)
     (delete-window nerdtab--window)
@@ -347,16 +350,6 @@ The button lookes like: 1 *Help*.
                 tab-list))))
     tab-list))
 
-(defun nerdtab-full-refresh ()
-  "Refresh nerdtab buffer.
-This function syncs tab list and (buffer-list),
-which most likely will change the order of your tabs.
-So don't use it too often."
-  (interactive)
-  (setq nerdtab--tab-list (nerdtab--make-tab-list))
-  (nerdtab--show-ui)
-  (nerdtab--redraw-all-tab))
-
 (defun nerdtab--update-tab-list ()
   "Update nerdtab list upon buffer creation, rename, delete."
   (let ((new-list (nerdtab--make-tab-list))
@@ -370,43 +363,56 @@ So don't use it too often."
       (add-to-list 'return-list remaining-new-tab t))
     (setq nerdtab--tab-list return-list)))
 
-;; (defun nerdtab--update-on-hook (&rest _)
-;;   "Update in 0.5 seconds."
-;;   ;; to avoid recurisve calling
-;;   (remove-hook 'buffer-list-update-hook #'nerdtab--update-on-hook)
-;;   (run-with-idle-timer
-;;    0.5 1
-;;    (lambda ()
-;;      (nerdtab--show-ui)
-;;      (nerdtab--update-tab-list)
-;;      (nerdtab--redraw-all-tab)
-;;      (when nerdtab-mode
-;;        (add-hook 'buffer-list-update-hook #'nerdtab--update-on-hook))
-;;      )))
+(defun nerdtab-full-refresh ()
+  "Refresh nerdtab buffer.
+This function syncs tab list and (buffer-list),
+which most likely will change the order of your tabs.
+So don't use it too often."
+  (interactive)
+  (setq nerdtab--tab-list (nerdtab--make-tab-list))
+  (nerdtab--show-ui)
+  (nerdtab--redraw-all-tab))
+
+(defun nerdtab-update ()
+  "Update nerdtab tab list.
+Similar to `nerdtab-full-refresh' but do not change the order of tabs."
+  (nerdtab--show-ui)
+  (nerdtab--update-tab-list)
+  (nerdtab--redraw-all-tab)
+  (nerdtab--update-next-cycle -1))
+
+;;
+;; Timer mode related functions
+;;
 
 (defun nerdtab--update-next-cycle (&optional do)
   "Make nerdtab update tab list on next cycle.
 If DO is non-nil, make it not to."
   (setq nerdtab--do-update (not do)))
 
-(defun nerdtab-update ()
-  "Update nerdtab tab list."
-  (nerdtab--show-ui)
-  (nerdtab--update-tab-list)
-  (nerdtab--redraw-all-tab)
-  (nerdtab--update-next-cycle -1))
-
 (defun nerdtab--timer-update ()
   "Update when needs to."
   (when nerdtab--do-update
     (nerdtab-update)))
 
+;;
+;; Buffer switch hook related functions
+;;
+
+
+;;
+;; Active update mode related functions
+;;
+
 (defun nerdtab--active-update ()
   "Used in `nerdtab-active-mode'. Update tab list."
-  (remove-hook 'buffer-list-update-hook #'nerdtab--active-update)
-  (nerdtab-update)
-  (when nerdtab-mode
-    (add-hook 'buffer-list-update-hook #'nerdtab--active-update)))
+  (unless (eq nerdtab--last-buffer (current-buffer))
+    (nerdtab-update)
+    (setq nerdtab--last-buffer (current-buffer))))
+
+;;
+;; Commands
+;;
 
 (defun nerdtab-jump (index)
   "Jump to INDEX tab."
@@ -420,7 +426,6 @@ If DO is non-nil, make it not to."
           `(lambda () ,(format "Jump to %sth tab." index)
              (interactive)
              (nerdtab-jump ,index)))))
-
 
 (define-nerdtab-jump-func 50)
 
