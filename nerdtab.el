@@ -383,7 +383,7 @@ If DO is non-nil, make it not to."
   (interactive "nIndex of tab: ")
   (funcall nerdtab-open-func (nth 1 (nth index nerdtab--tab-list))))
 
-(defun nerdtab-make-jump-func (max)
+(defun define-nerdtab-jump-func (max)
   "Make `nerdtab-jump-n' functions from 1 to MAX."
   (dolist (index (number-sequence 0 max))
     (fset (intern (format "nerdtab-jump-%d" index))
@@ -392,7 +392,7 @@ If DO is non-nil, make it not to."
              (nerdtab-jump ,index)))))
 
 
-(nerdtab-make-jump-func 50)
+(define-nerdtab-jump-func 50)
 
 (provide 'nerdtab)
 
