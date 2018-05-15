@@ -154,12 +154,13 @@ The function should take a singgle buffer as argument.")
         (nerdtab-full-refresh)
         (add-hook 'buffer-list-update-hook #'nerdtab--update-next-cycle)
         (setq nerdtab--timer (run-with-timer 1 nerdtab--update-interval #'nerdtab--timer-update)))
+    (cancel-timer nerdtab--timer)
     (remove-hook 'buffer-list-update-hook #'nerdtab--update-next-cycle)
     (kill-buffer nerdtab--buffer)
     (setq nerdtab--buffer nil)
     (delete-window nerdtab--window)
     (setq nerdtab--window nil)
-    (cancel-timer nerdtab--timer)))
+    ))
 
 ;;
 ;; Functions -- sort of inverse hiearchy, the final function that calls everyone else is in the bottom.
