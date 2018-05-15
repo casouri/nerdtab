@@ -67,7 +67,7 @@
   :group 'nerdtab
   :type 'number)
 
-(defcustom nerdtab-regex-blacklist '("\\*.*\\*")
+(defcustom nerdtab-regex-blacklist '("\\*.*\\*" "^magit.*")
   "The regex blacklist of buffer names.
 Nerdtab does not list buffers that match any regex in this blacklist."
   :group 'nerdtab
