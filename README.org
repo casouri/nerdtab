@@ -1,6 +1,5 @@
 #+TITLE: NerdTab
 
-* Summary
 
 This package gives you tabs.
 But instead of the normal GUI tabs you might think of,
