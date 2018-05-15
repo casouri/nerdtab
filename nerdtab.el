@@ -79,7 +79,7 @@ Because that order in (buffer-list) changes all the time,
 and I want my tab list to be more stable.
 So user can expect the index of a tab to not change very often.
 
-`nerdtab-refresh' syncs both list.")
+`nerdtab-full-refresh' syncs both list.")
 
 (defvar nerdtab--window nil
   "Nerdtab window.")
@@ -89,6 +89,16 @@ So user can expect the index of a tab to not change very often.
 
 (defvar nerdtab-buffer-name "*nerdtab*"
   "Name of nerdtab buffer.")
+
+(defvar nerdtab--do-update nil
+  "If non-nil, nerdtab will update tab list in next cycle.
+Time interval between to cycle is defined by `nerdtab--update-interval'.")
+
+(defvar nerdtab--update-interval 2
+  "Nerdtab checkes if it needs to update tab list in every this seconds.")
+
+(defvar nerdtab--timer nil
+  "The object that is used to disable timer.")
 
 ;;
 ;; Modes
@@ -109,13 +119,15 @@ So user can expect the index of a tab to not change very often.
   (if nerdtab-mode
       (progn
         (nerdtab--show-ui)
-        (nerdtab-refresh)
-        (nerdtab--install-advice))
-    (nerdtab--remove-advice)
+        (nerdtab-full-refresh)
+        (add-hook 'buffer-list-update-hook #'nerdtab--update-next-cycle)
+        (setq nerdtab--timer (run-with-timer 1 nerdtab--update-interval #'nerdtab--timer-update)))
+    (remove-hook 'buffer-list-update-hook #'nerdtab--update-next-cycle)
     (kill-buffer nerdtab--buffer)
     (setq nerdtab--buffer nil)
     (delete-window nerdtab--window)
-    (setq nerdtab--window nil)))
+    (setq nerdtab--window nil)
+    (cancel-timer nerdtab--timer)))
 
 ;;
 ;; Functions -- sort of inverse hiearchy, the final function that calls everyone else is in the bottom.
@@ -206,6 +218,9 @@ This function makes sure both buffer and window are present."
     (set-window-buffer nerdtab--window nerdtab--buffer)
     (nerdtab-major-mode)
     (setq mode-line-format nil)
+    (nerdtab--h-this-v-that|
+     ((window-preserve-size) nil t)
+     ((window-preserve-size)))
     (when (featurep 'linum) (linum-mode -1))
     (when (featurep 'nlinum) (nlinum-mode -1))
     (when (featurep 'display-line-numbers) (display-line-numbers-mode -1))
@@ -238,7 +253,6 @@ You can see index is at the beginning."
 (defun nerdtab--redraw-all-tab ()
   "Redraw every tab in `nerdtab-buffer'."
   (interactive)
-  (nerdtab--show-ui)
   (let ((original-window (selected-window)))
     (select-window nerdtab--window)
     (setq buffer-read-only nil)
@@ -252,8 +266,8 @@ You can see index is at the beginning."
     (setq buffer-read-only t)
     (select-window original-window)))
 
-(defun nerdtab-full-update-tab-list ()
-  "Make a complete refresh of `nerdtab--tab-list'."
+(defun nerdtab--make-tab-list ()
+  "Make a tab list from `nerdtab--tab-list'."
   (let ((tab-list ())
         (max-tab-num (nerdtab--h-this-v-that|
                   (nerdtab-max-tab-horizontal)
@@ -267,95 +281,77 @@ You can see index is at the beginning."
           (setq count (1+ count))
           (push (nerdtab--make-tab buffer)
                 tab-list))))
-    (setq nerdtab--tab-list tab-list)))
+    tab-list))
 
-(defun nerdtab-refresh ()
+(defun nerdtab-full-refresh ()
   "Refresh nerdtab buffer.
 This function syncs tab list and (buffer-list),
 which most likely will change the order of your tabs.
 So don't use it too often."
   (interactive)
-  (nerdtab-full-update-tab-list)
+  (setq nerdtab--tab-list (nerdtab--make-tab-list))
+  (nerdtab--show-ui)
   (nerdtab--redraw-all-tab))
 
-;; (defun nerdtab-refresh-on-hook (&rest _)
-;;   "Refresh in 0.5 seconds."
+(defun nerdtab--update-tab-list ()
+  "Update nerdtab list upon buffer creation, rename, delete."
+  (let ((new-list (nerdtab--make-tab-list))
+        (old-list nerdtab--tab-list)
+        (return-list ()))
+    (dolist (old-tab old-list)
+      (when (member old-tab new-list)
+        (add-to-list 'return-list old-tab t)
+        (delete old-tab new-list)))
+    (dolist (remaining-new-tab new-list)
+      (add-to-list 'return-list remaining-new-tab t))
+    (setq nerdtab--tab-list return-list)))
+
+;; (defun nerdtab--update-on-hook (&rest _)
+;;   "Update in 0.5 seconds."
 ;;   ;; to avoid recurisve calling
-;;   (advice-remove #'get-buffer-create #'nerdtab-refresh-on-hook)
+;;   (remove-hook 'buffer-list-update-hook #'nerdtab--update-on-hook)
 ;;   (run-with-idle-timer
 ;;    0.5 1
 ;;    (lambda ()
-;;      (nerdtab-refresh)
+;;      (nerdtab--show-ui)
+;;      (nerdtab--update-tab-list)
+;;      (nerdtab--redraw-all-tab)
 ;;      (when nerdtab-mode
-;;        (advice-remove #'get-buffer-create #'nerdtab-refresh-on-hook))
+;;        (add-hook 'buffer-list-update-hook #'nerdtab--update-on-hook))
 ;;      )))
 
-;;
-;; Advices (add, rename, kill)
-;;
+(defun nerdtab--update-next-cycle (&optional do)
+  "Make nerdtab update tab list on next cycle.
+If DO is non-nil, make it not to."
+  (setq nerdtab--do-update (not do)))
 
-(defun nerdtab--add-buffer (buffer)
-  "Add BUFFER to `nerdtab--tab-list'."
-  (when (nerdtab--if-valid-buffer buffer)
-    (add-to-list
-     'nerdtab--tab-list
-     (nerdtab--make-tab buffer)
-     t))
-  buffer)
+(defun nerdtab-update ()
+  "Update nerdtab tab list."
+  (nerdtab--show-ui)
+  (nerdtab--update-tab-list)
+  (nerdtab--redraw-all-tab)
+  (nerdtab--update-next-cycle -1))
 
-(defun nerdtab--add-buffer-advice (oldfunc buffer-or-name)
-  "Advice around `get-buffer-create' (OLDFUNC). BUFFER-OR-NAME.
-Add new buffer to `nerdtab--tab-list'."
-  (let ((buffer (nerdtab--add-buffer (apply oldfunc (list buffer-or-name)))))
-    (nerdtab--redraw-all-tab)
-    buffer))
+(defun nerdtab--timer-update ()
+  "Update when needs to."
+  (when nerdtab--do-update
+    (nerdtab-update)))
 
-(defun nerdtab--remove-buffer (buffer)
-  "Remove BUFFER from `nerdtab--tab-list'."
-  (let ((tab (nerdtab--make-tab buffer)))
-    (when (member tab nerdtab--tab-list)
-      (delete tab nerdtab--tab-list))))
+(defun nerdtab-jump (index)
+  "Jump to INDEX tab."
+  (interactive "nIndex of tab: ")
+  (switch-to-buffer (nth 1 (nth index nerdtab--tab-list))))
 
-(defun nerdtab--remove-buffer-advice (oldfunc &optional buffer-or-name)
-  "Advice around `kill-buffer' (OLDFUNC). BUFFER-OR-NAME.
-Add new buffer to `nerdtab--tab-list'."
-  (let ((buffer-to-kill (if buffer-or-name
-                            (get-buffer-create buffer-or-name)
-                          (current-buffer))))
-    (nerdtab--remove-buffer buffer-to-kill)
-    (nerdtab--redraw-all-tab)
-    (apply oldfunc (list buffer-or-name))))
+(defun nerdtab-make-jump-func (max)
+  "Make `nerdtab-jump-n' functions from 1 to MAX."
+  (dolist (index (number-sequence 0 max))
+    (fset (intern (format "nerdtab-jump-%d" index))
+          `(lambda () ,(format "Jump to %sth tab." index)
+             (interactive)
+             (nerdtab-jump ,index)))))
 
-(defun nerdtab--rename-buffer (new-name)
-  "Rename a tab to NEW-NAME."
-  (let ((old-tab (nerdtab--make-tab (current-buffer)))
-        (index 0))
-    (dolist (tab nerdtab--tab-list)
-      (when (equal tab old-tab)
-        (setf (nth index nerdtab--tab-list) `(,(nerdtab-turncate-buffer-name
-                                                new-name)
-                                              ,(current-buffer))))
-      (setq index (1+ index))))
-  new-name)
 
-(defun nerdtab--rename-buffer-advice (oldfunc new-name &optional unique)
-  "Advice around `rename-buffer' (OLDFUNC). NEW-NAME. UNIQUE.
-Add new buffer to `nerdtab--tab-list'."
-  (let ((new-name (nerdtab--rename-buffer (apply oldfunc (list new-name unique)))))
-    (nerdtab--redraw-all-tab)
-    new-name))
-
-(defun nerdtab--install-advice ()
-  "Install advices."
-  (advice-add 'get-buffer-create :around #'nerdtab--add-buffer-advice)
-  (advice-add 'kill-buffer       :around #'nerdtab--remove-buffer-advice)
-  (advice-add 'rename-buffer     :around #'nerdtab--rename-buffer-advice))
-
-(defun nerdtab--remove-advice ()
-  "Remove advices."
-  (advice-remove 'get-buffer-create #'nerdtab--add-buffer-advice)
-  (advice-remove 'kill-buffer       #'nerdtab--remove-buffer-advice)
-  (advice-remove 'rename-buffer     #'nerdtab--rename-buffer-advice))
+(nerdtab-make-jump-func 50)
 
 (provide 'nerdtab)
 
