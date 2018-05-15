@@ -391,11 +391,6 @@ If DO is non-nil, make it not to."
     (nerdtab-update)))
 
 ;;
-;; Buffer switch hook related functions
-;;
-
-
-;;
 ;; Active update mode related functions
 ;;
 
