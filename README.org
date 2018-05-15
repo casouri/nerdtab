@@ -10,11 +10,14 @@ or by clicking the tab.
 
 * Screenshot
 
-- on left :: [[./s0.png][./s0.png]]
+** On left
 
-- on top :: [[./s1.png][./s1.png]]
+[[./s0.png][./s0.png]]
 
-            
+** On top
+
+[[./s1.png][./s1.png]]
+
 * Usage
 
   
