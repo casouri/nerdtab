@@ -37,6 +37,11 @@ you can right click on a tab to kill it.
             
 * Customizations
   
+If you want more highlight on tabs, set
+#+BEGIN_SRC lisp
+(set-face-attribute 'nerdtab-tab-face nil :inherit 'hl-line)
+#+END_SRC
+  
 #+BEGIN_SRC lisp
 (defcustom nerdtab-window-position 'left
   "The position of nerdtab window."
