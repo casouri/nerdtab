@@ -103,6 +103,10 @@ Nerdtab does not list buffers that match any regex in this blacklist."
   :group 'nerdtab
   :type 'number)
 
+(defcustom nerdtab-buffer-list-func #'buffer-list
+  "The function that provides a list of buffers to nerdtab."
+  :group 'nerdtab
+  :type 'function)
 
 ;;
 ;; Variables
@@ -335,7 +339,7 @@ The button lookes like: 1 *Help*.
                   (nerdtab-max-tab-vertical)))
         (count 0))
     (catch 'max-num
-      (dolist (buffer (buffer-list))
+      (dolist (buffer (funcall nerdtab-buffer-list-func))
         (when (nerdtab--if-valid-buffer buffer)
           (when (>= count max-tab-num)
             (throw 'max-num count))
@@ -359,7 +363,7 @@ The button lookes like: 1 *Help*.
 
 (defun nerdtab-full-refresh ()
   "Refresh nerdtab buffer.
-This function syncs tab list and (buffer-list),
+This function syncs tab list and list returned by `nerdtab-buffer-list-func',
 which most likely will change the order of your tabs.
 So don't use it too often."
   (interactive)
