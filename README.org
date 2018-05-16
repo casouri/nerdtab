@@ -33,7 +33,7 @@ Alternativly, you can just click on the tab.
 Kill a buffer with =nerdtab-kill-<number>=.
 
 Similar to jump functions,
-you can right click on a tab to killl it.
+you can right click on a tab to kill it.
             
 * Customizations
   
