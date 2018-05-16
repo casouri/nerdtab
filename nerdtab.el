@@ -205,7 +205,8 @@ The function should take a singgle buffer as argument.")
     (remove-hook 'post-command-hook #'nerdtab--active-update)
     (kill-buffer nerdtab--buffer)
     (setq nerdtab--buffer nil)
-    (delete-window nerdtab--window)
+    (when (window-live-p nerdtab--window)
+      (delete-window nerdtab--window))
     (setq nerdtab--window nil)))
 
 ;;
