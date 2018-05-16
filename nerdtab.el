@@ -274,7 +274,7 @@ This function makes sure both buffer and window are present."
       (nerdtab-major-mode)
       (setq mode-line-format nerdtab-mode-line-format)
       (nerdtab--h-this-v-that|
-       ((setq-local line-spacing 5))
+       ((setq-local line-spacing 3))
        ((setq-local line-spacing 3)))
       (when (featurep 'linum) (linum-mode -1))
       (when (featurep 'nlinum) (nlinum-mode -1))
