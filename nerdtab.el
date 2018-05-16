@@ -154,7 +154,7 @@ Time interval between to cycle is defined by `nerdtab-update-interval'.")
   "The function to open buffer.
 Used in tab button and `nerdtab-jump-xx' functions.
 
-The function should take a singgle buffer as argument.")
+The function should take a single buffer as argument.")
 
 (defvar nerdtab--last-buffer nil
   "Last buffer. Used to compare against current buffer to see if buffer changed.")
