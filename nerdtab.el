@@ -424,6 +424,8 @@ If DO is non-nil, make it not to."
              (interactive)
              (nerdtab-jump ,index)))))
 
+(define-nerdtab-jump-func 50)
+
 (defun nerdtab-kill (index)
   "Kill the INDEX th buffer."
   (interactive "nIndex of tab: ")
