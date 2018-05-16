@@ -31,7 +31,7 @@ On macOS, you can bind them to =s-<1..9>=.
 Alternativly, you can just click on the tab.
             
 * Customizations
-
+  
 #+BEGIN_SRC lisp
 (defcustom nerdtab-window-position 'left
   "The position of nerdtab window."
@@ -77,6 +77,12 @@ Nerdtab does not list buffers that match any regex in this blacklist."
   :group 'nerdtab
   :type 'number)
 
+(defcustom nerdtab-buffer-list-func #'buffer-list
+  "The function that provides a list of buffers to nerdtab.
+Change it to =projectile-project-buffers=
+to intergrate with projectile (not tested)"
+  :group 'nerdtab
+  :type 'function)
 
 (defface nerdtab-tab-face
   '((t (:inherit default :underline nil)))

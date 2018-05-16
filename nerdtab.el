@@ -94,7 +94,9 @@ Nerdtab does not list buffers that match any regex in this blacklist."
   :type 'number)
 
 (defcustom nerdtab-buffer-list-func #'buffer-list
-  "The function that provides a list of buffers to nerdtab."
+  "The function that provides a list of buffers to nerdtab.
+Change it to =projectile-project-buffers=
+to intergrate with projectile (not tested)"
   :group 'nerdtab
   :type 'function)
 
