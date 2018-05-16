@@ -295,17 +295,29 @@ The button lookes like: 1 *Help*.
                       'nerdtab-current-tab-face
                     'nerdtab-tab-face)))
     (insert-text-button (format "%d %s" index tab-name)
-                   'action
-                   `(lambda (_)
-                     (funcall nerdtab-open-func ,buffer))
-                   'help-echo
-                   (buffer-name buffer)
-                   'follow-link
-                   t
-                   'face
-                   tab-face
-                   'mouse-face
-                   'nerdtab-tab-mouse-face)))
+                        ;; 'action
+                        ;; `(lambda (_)
+                        ;;   (funcall nerdtab-open-func ,buffer))
+                        'keymap
+                        (let ((keymap (make-sparse-keymap)))
+                          (define-key keymap [mouse-2]
+                            `(lambda ()
+                               (interactive)
+                               (funcall nerdtab-open-func ,buffer)))
+                          (define-key keymap [mouse-3]
+                            `(lambda ()
+                               (interactive)
+                               (kill-buffer ,buffer)
+                               (nerdtab-update)))
+                          keymap)
+                        'help-echo
+                        (buffer-name buffer)
+                        'follow-link
+                        t
+                        'face
+                        tab-face
+                        'mouse-face
+                        'nerdtab-tab-mouse-face)))
 
 (defun nerdtab--redraw-all-tab ()
   "Redraw every tab in `nerdtab-buffer'."
@@ -412,7 +424,21 @@ If DO is non-nil, make it not to."
              (interactive)
              (nerdtab-jump ,index)))))
 
-(define-nerdtab-jump-func 50)
+(defun nerdtab-kill (index)
+  "Kill the INDEX th buffer."
+  (interactive "nIndex of tab: ")
+  (kill-buffer (nth 1 (nth index nerdtab--tab-list)))
+  (nerdtab-update))
+
+(defun define-nerdtab-kill-func (max)
+  "Make `nerdtab-kill-n' functions from 1 to MAX."
+  (dolist (index (number-sequence 0 max))
+    (fset (intern (format "nerdtab-kill-%d" index))
+          `(lambda () ,(format "Kill the  %sth tab." index)
+             (interactive)
+             (nerdtab-kill ,index)))))
+
+(define-nerdtab-kill-func 50)
 
 (provide 'nerdtab)
 
