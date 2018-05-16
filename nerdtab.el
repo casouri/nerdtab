@@ -98,7 +98,7 @@ Nerdtab does not list buffers that match any regex in this blacklist."
   :group 'nerdtab
   :type 'sexp)
 
-(defcustom nerdtab--update-interval 2
+(defcustom nerdtab-update-interval 2
   "Nerdtab checkes if it needs to update tab list in every this seconds."
   :group 'nerdtab
   :type 'number)
@@ -155,7 +155,7 @@ So user can expect the index of a tab to not change very often.
 
 (defvar nerdtab--do-update nil
   "If non-nil, nerdtab will update tab list in next cycle.
-Time interval between to cycle is defined by `nerdtab--update-interval'.")
+Time interval between to cycle is defined by `nerdtab-update-interval'.")
 
 (defvar nerdtab--timer nil
   "The object that is used to disable timer.")
@@ -185,7 +185,7 @@ The function should take a singgle buffer as argument.")
         (nerdtab--show-ui)
         (nerdtab-full-refresh)
         (add-hook 'buffer-list-update-hook #'nerdtab--update-next-cycle)
-        (setq nerdtab--timer (run-with-timer 1 nerdtab--update-interval #'nerdtab--timer-update)))
+        (setq nerdtab--timer (run-with-timer 1 nerdtab-update-interval #'nerdtab--timer-update)))
     (cancel-timer nerdtab--timer)
     (remove-hook 'buffer-list-update-hook #'nerdtab--update-next-cycle)
     (kill-buffer nerdtab--buffer)
