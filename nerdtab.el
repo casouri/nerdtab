@@ -32,18 +32,8 @@
   
 ;; `nerdtab-mode' is a global minor mode.
 ;; Turn it on and it will open a side window and display buffers as tabs for you.
-  
-;; Update: OK so I actually can't bear the lag so I changed the behavior to activly update tab list.
-;;
-;; You may notice a slight delay between change in buffer list
-;; and update in nerdtab window.
-;; That is because I use a timer to invoke tab list updates
-;; because 1) you probably don't need the buffer to show up in list
-;; immediatly 2) it protects Emacs from crashing when it opens 10000 buffers at once.
 
-;; If there are people that actually use this package
-;; and someone actually cares about that lag,
-;; I can add a mode or an option.
+;; Checkout homepage for more information on usage and customizations.
   
 ;; Note that `nerdtab--' means private, `nerdtab-' means public / customizable (for variables)
 
