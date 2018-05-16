@@ -318,19 +318,18 @@ The button lookes like: 1 *Help*.
 (defun nerdtab--redraw-all-tab ()
   "Redraw every tab in `nerdtab-buffer'."
   (interactive)
-  (let ((original-window (selected-window))
-        (current-buffer (current-buffer)))
-    (select-window nerdtab--window)
-    (setq buffer-read-only nil)
-    (erase-buffer)
-    (let ((index 0))
-      (dolist (tab nerdtab--tab-list)
-        (nerdtab--draw-tab tab index current-buffer)
-        (setq index (1+ index))
-        (insert (nerdtab--h-this-v-that| ("  ") ("\n"))))
-      (goto-char 0))
-    (setq buffer-read-only t)
-    (select-window original-window)))
+  (let ((current-buffer (current-buffer)))
+    (with-current-buffer nerdtab--buffer
+      (setq buffer-read-only nil)
+      (erase-buffer)
+      (let ((index 0))
+        (dolist (tab nerdtab--tab-list)
+          (nerdtab--draw-tab tab index current-buffer)
+          (setq index (1+ index))
+          (insert (nerdtab--h-this-v-that| ("  ") ("\n"))))
+        (goto-char 0))
+      (setq buffer-read-only t)
+      )))
 
 (defun nerdtab--make-tab-list ()
   "Make a tab list from `nerdtab--tab-list'."
@@ -376,9 +375,8 @@ So don't use it too often."
   "Update nerdtab tab list.
 Similar to `nerdtab-full-refresh' but do not change the order of tabs."
   (nerdtab--show-ui)
-  (when (nerdtab--if-valid-buffer (current-buffer))
-    (nerdtab--update-tab-list)
-    (nerdtab--redraw-all-tab))
+  (nerdtab--update-tab-list)
+  (nerdtab--redraw-all-tab)
   (nerdtab--update-next-cycle -1))
 
 ;;
