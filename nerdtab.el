@@ -17,7 +17,7 @@
 
 ;; Author: Yuan Fu <casouri@gmail.com>
 ;; URL: https://github.com/casouri/nerdtab
-;; Version: 1.2.2
+;; Version: 1.2.3
 ;; Keywords: convenience
 ;; Package-Requires: ((emacs "24.5"))
 
@@ -448,7 +448,7 @@ If DO is non-nil, make it not to."
   (delete-dups nerdtab--tab-list)
   (nerdtab-update))
 
-(defun define-nerdtab-move-func (max)
+(defun define-nerdtab-move-to-func (max)
   "Make `nerdtab-move-to-n' functions from 1 to MAX."
   (dolist (index (number-sequence 0 max))
     (fset (intern (format "nerdtab-move-to-%d" index))
