@@ -24,16 +24,35 @@ It is not in melpa so you need to manually load it (or require it)
 (load "nerdtab.el")
 #+END_SRC
 
+** Jump
 Use =nerdtab-jump-<number>= to jump to a buffer.
+For example =nerdtab-jump-1=.
+
 You can bind those functions to keys. 
 On macOS, you can bind them to =s-<1..9>=. 
 
 Alternativly, you can just click on the tab.
 
+** Kill
 Kill a buffer with =nerdtab-kill-<number>=.
+For example, =nerdtab-kill-2=.
 
 Similar to jump functions,
 you can right click on a tab to kill it.
+
+** Move
+Move the current buffer's tab to nth with =nerdtab-move-<number>=.
+For example =nerdtab-move-3=.
+
+There is no mouse action for this function.
+
+** Note
+All three types of functions above are created by
+definer functions of each.
+They are created from 0 to 50.
+And I think 50 is more than enough.
+If you need more, take a look at source code in the bottom.
+There are the definers.
             
 * Customizations
   

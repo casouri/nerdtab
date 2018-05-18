@@ -442,6 +442,22 @@ If DO is non-nil, make it not to."
 
 (define-nerdtab-kill-func 50)
 
+(defun nerdtab-move-to (index)
+  "Move current buffer's tab to INDEX th."
+  (setf (nth index nerdtab--tab-list) (nerdtab--make-tab (current-buffer)))
+  (delete-dups nerdtab--tab-list)
+  (nerdtab-update))
+
+(defun define-nerdtab-move-func (max)
+  "Make `nerdtab-move-to-n' functions from 1 to MAX."
+  (dolist (index (number-sequence 0 max))
+    (fset (intern (format "nerdtab-move-to-%d" index))
+          `(lambda () ,(format "Move current buffer's tab to  the  %sth." index)
+             (interactive)
+             (nerdtab-move-to ,index)))))
+
+(define-nerdtab-move-to-func 50)
+
 (provide 'nerdtab)
 
 ;;; nerdtab.el ends here
