@@ -105,17 +105,17 @@ to intergrate with projectile (not tested)"
 ;;
 
 (defface nerdtab-tab-face
-  '((t (:inherit 'default :underline nil)))
+  '((t (:inherit 'default)))
   "Face of tabs in nerdtab buffer."
   :group 'nerdtab)
 
 (defface nerdtab-current-tab-face
-  '((t (:inherit 'highlight :underline nil)))
+  '((t (:inherit 'highlight)))
   "Face of current tab in nerdtab buffer."
   :group 'nerdtab)
 
 (defface nerdtab-tab-mouse-face
-  '((t (:inherit 'highlight :underline nil)))
+  '((t (:inherit 'highlight)))
   "Face of tabs under mouse in nerdtab buffer."
   :group 'nerdtab)
 
