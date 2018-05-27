@@ -440,6 +440,20 @@ If DO is non-nil, make it not to."
 
 (define-nerdtab-move-to-func 50)
 
+
+(defun nerdtab-change-window-posiion (position)
+  "Change the window position to left/right/top/bottom base on POSITION(h/l/k/j)."
+  (interactive "cPosition (h/j/k/l): ")
+  (let ((position-symbol (pcase position
+                           (?k 'top)
+                           (?j 'bottom)
+                           (?h 'left)
+                           (?l 'right)
+                           )))
+    (setq nerdtab-window-position position-symbol)
+    (delete-window nerdtab--window)
+    (nerdtab--show-ui)))
+
 (provide 'nerdtab)
 
 ;;; nerdtab.el ends here
