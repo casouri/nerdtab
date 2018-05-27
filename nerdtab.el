@@ -168,6 +168,7 @@ The function should take a single buffer as argument.")
 (define-derived-mode nerdtab-major-mode special-mode
   "NerdTab")
 
+;;;###autoload
 (define-minor-mode nerdtab-timer-mode
   "A global minor mode that update nerdtab tabs base on timer."
   :global t
@@ -185,6 +186,7 @@ The function should take a single buffer as argument.")
     (delete-window nerdtab--window)
     (setq nerdtab--window nil)))
 
+;;;###autoload
 (define-minor-mode nerdtab-mode
   "A global minor mode that provide tabs and activly update tab list."
   :global t
