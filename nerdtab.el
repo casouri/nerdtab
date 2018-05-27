@@ -225,23 +225,6 @@ THIS and THAT have to ba lists of sexps to be evaluate."
   "Get nerdtab buffer, create one if not exist."
   (get-buffer-create nerdtab-buffer-name))
 
-;; (defun nerdtab-turncate-buffer-name (buffer-name)
-;;   "Make sure BUFFER-NAME is short enough."
-;;   (let ((max-width (- nerdtab-tab-width 3))) ; numbering take 2-3 char
-;;     (if (< (length buffer-name) max-width)
-;;         buffer-name
-;;       ;; half-length is the length of each half of the name
-;;       ;; someloooooo...ooooongname
-;;       ;; ^   this  ^   ^ & this  ^
-;;       ;;              pos3    pos4
-;;       ;; these poses are indexes of substring
-;;       (let* ((half-length (- (/ max-width 2) 2))
-;;              (pos3 (- (length buffer-name) half-length))
-;;              (pos4 (length buffer-name)))
-;;         (format "%s...%s"
-;;                 (substring buffer-name 0 (1- half-length))
-;;                 (substring buffer-name pos3 pos4))))))
-
 (defun nerdtab-turncate-buffer-name (buffer-name)
   "Make sure BUFFER-NAME is short enough."
   (let ((max-width (- nerdtab-tab-width 3))
@@ -295,9 +278,6 @@ The button lookes like: 1 *Help*.
                       'nerdtab-current-tab-face
                     'nerdtab-tab-face)))
     (insert-text-button (format "%d %s" index tab-name)
-                        ;; 'action
-                        ;; `(lambda (_)
-                        ;;   (funcall nerdtab-open-func ,buffer))
                         'keymap
                         (let ((keymap (make-sparse-keymap)))
                           (define-key keymap [mouse-2]
