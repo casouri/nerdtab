@@ -10,6 +10,15 @@ it provides more keyboard-oriented (and visually inadequate) tabs.
 
 You can think of it like a winum for buffers.
 
+* Why it's useful
+  
+On a small screen, you surely can handle two buffers with =switch-to-last-buffer=.
+But how about three? four? five?
+Don't open the buffer list and type file name and hit enter,
+intead, hit =s-1/2/3= to switch between buffers.
+
+Now you can work with multiple files on a small screen happlily!
+
 * Screenshot
 
 ** On left
