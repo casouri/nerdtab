@@ -1,5 +1,8 @@
 #+TITLE: NerdTab
 
+[[https://melpa.org/#/nerdtab][file:https://melpa.org/packages/nerdtab-badge.svg]]
+
+[[./nerdtab.png][./nerdtab.png]]
 
 This package gives you tabs.
 But instead of the normal GUI tabs you might think of,
@@ -18,10 +21,17 @@ You can think of it like a winum for buffers.
 [[./s1.png][./s1.png]]
 
 * Usage
+  
+Download from melpa:
+#+BEGIN_SRC 
+M-x package-install RET nerdtab RET
+#+END_SRC
 
-It is not in melpa so you need to manually load it (or require it)
+Configure with =use-package=:
 #+BEGIN_SRC lisp
-(load "nerdtab.el")
+(use-package nerdtab
+  :config 
+  (global-set-key (kbd "C-c M-b") #'nerdtab-minor-mode))
 #+END_SRC
 
 ** Jump
