@@ -40,6 +40,8 @@
 
 ;;; Code:
 
+(require 'subr-x)
+
 ;;
 ;; Customizations
 ;;
