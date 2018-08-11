@@ -373,7 +373,7 @@ If DO is non-nil, make it not to."
 (defun nerdtab--active-update ()
   "Used in `nerdtab-active-mode'. Update tab list."
   (unless (or (string-match "Minibuf" (buffer-name))
-              (string-match nerdtab-buffer-name (buffer-name))
+              (string-match (format "^%s$" nerdtab-buffer-name) (buffer-name))
               (eq nerdtab--last-buffer (current-buffer)))
     (nerdtab-update)
     (setq nerdtab--last-buffer (current-buffer))))
@@ -385,7 +385,7 @@ If DO is non-nil, make it not to."
 (defun nerdtab-jump (index)
   "Jump to INDEX tab."
   (interactive "nIndex of tab: ")
-  (nerdtab--open-buffer (nth 1 (nth index nerdtab--tab-list))))
+  (switch-to-buffer (nth 1 (nth index nerdtab--tab-list))))
 
 (defun define-nerdtab-jump-func (max)
   "Make `nerdtab-jump-n' functions from 1 to MAX."
