@@ -144,7 +144,7 @@ So user can expect the index of a tab to not change very often.
 (defvar nerdtab--buffer nil
   "Nerdtab buffer.")
 
-(defvar nerdtab-buffer-name "*nerdtab*"
+(defvar nerdtab-buffer-name " *nerdtab*"
   "Name of nerdtab buffer.")
 
 (defvar nerdtab--do-update nil
