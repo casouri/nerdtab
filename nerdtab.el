@@ -151,9 +151,6 @@ So user can expect the index of a tab to not change very often.
   "If non-nil, nerdtab will update tab list in next cycle.
 Time interval between to cycle is defined by `nerdtab-update-interval'.")
 
-(defvar nerdtab--timer nil
-  "The object that is used to disable timer.")
-
 (defvar nerdtab-open-func #'switch-to-buffer
   "The function to open buffer.
 Used in tab button and `nerdtab-jump-xx' functions.
@@ -169,24 +166,6 @@ The function should take a single buffer as argument.")
 
 (define-derived-mode nerdtab-major-mode special-mode
   "NerdTab")
-
-;;;###autoload
-(define-minor-mode nerdtab-timer-mode
-  "A global minor mode that update nerdtab tabs base on timer."
-  :global t
-  :require 'nerdtab
-  (if nerdtab-timer-mode
-      (progn
-        (nerdtab--show-ui)
-        (nerdtab-full-refresh)
-        (add-hook 'buffer-list-update-hook #'nerdtab--update-next-cycle)
-        (setq nerdtab--timer (run-with-timer 1 nerdtab-update-interval #'nerdtab--timer-update)))
-    (cancel-timer nerdtab--timer)
-    (remove-hook 'buffer-list-update-hook #'nerdtab--update-next-cycle)
-    (kill-buffer nerdtab--buffer)
-    (setq nerdtab--buffer nil)
-    (delete-window nerdtab--window)
-    (setq nerdtab--window nil)))
 
 ;;;###autoload
 (define-minor-mode nerdtab-mode
