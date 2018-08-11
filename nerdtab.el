@@ -59,7 +59,7 @@
                  (const top)
                  (const bottom)))
 
-(defcustom nerdtab-mode-line-format '(" ")
+(defcustom nerdtab-mode-line-format nil
   "Mode-line format of nerdtab buffer."
   :group 'nerdtab
   :type 'plist)
