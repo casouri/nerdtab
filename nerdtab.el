@@ -209,6 +209,12 @@ The function should take a single buffer as argument.")
 ;; Functions -- sort of inverse hiearchy, the final function that calls everyone else is in the bottom.
 ;;
 
+(defun nerdtab--open-buffer (buffer)
+  "Open BUFFER.
+This function is bound to tab buttons."
+  (select-window (get-buffer-window nerdtab--last-buffer))
+  (switch-to-buffer buffer))
+
 (defun nerdtab--make-tab (buffer)
   "Make a tab from BUFFER."
   `(,(nerdtab-turncate-buffer-name (buffer-name buffer))
@@ -287,7 +293,7 @@ The button lookes like: 1 *Help*.
                           (define-key keymap [mouse-2]
                             `(lambda ()
                                (interactive)
-                               (funcall nerdtab-open-func ,buffer)))
+                               (nerdtab--open-buffer ,buffer)))
                           (define-key keymap [mouse-3]
                             `(lambda ()
                                (interactive)
@@ -387,7 +393,9 @@ If DO is non-nil, make it not to."
 
 (defun nerdtab--active-update ()
   "Used in `nerdtab-active-mode'. Update tab list."
-  (unless (eq nerdtab--last-buffer (current-buffer))
+  (unless (or (string-match "Minibuf" (buffer-name))
+              (string-match nerdtab-buffer-name (buffer-name))
+              (eq nerdtab--last-buffer (current-buffer)))
     (nerdtab-update)
     (setq nerdtab--last-buffer (current-buffer))))
 
@@ -398,7 +406,7 @@ If DO is non-nil, make it not to."
 (defun nerdtab-jump (index)
   "Jump to INDEX tab."
   (interactive "nIndex of tab: ")
-  (funcall nerdtab-open-func (nth 1 (nth index nerdtab--tab-list))))
+  (nerdtab--open-buffer (nth 1 (nth index nerdtab--tab-list))))
 
 (defun define-nerdtab-jump-func (max)
   "Make `nerdtab-jump-n' functions from 1 to MAX."
