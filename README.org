@@ -1,5 +1,9 @@
 #+TITLE: NerdTab
 
+
+*Note:* I have moved to [[https://github.com/manateelazycat/awesome-tab][awesome-tab]]! It's much better than nerdtab! Try it today!
+
+
 [[https://melpa.org/#/nerdtab][file:https://melpa.org/packages/nerdtab-badge.svg]]
 
 [[./nerdtab.png][./nerdtab.png]]
